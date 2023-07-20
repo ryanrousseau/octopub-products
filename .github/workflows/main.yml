@@ -1,0 +1,66 @@
+name: Main workflow
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+
+  package:
+    name: Create and push packages ⚙️
+    runs-on: ubuntu-latest
+    
+    outputs:
+      version: ${{ steps.version-generator.outputs.version }}
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set Version Number
+      id: version-generator
+      run: echo "version=$(date +'%Y.%m.%d').$GITHUB_RUN_NUMBER" >> $GITHUB_OUTPUT
+  
+    - name: Create artifacts folder
+      run: |
+        mkdir "$GITHUB_WORKSPACE/artifacts"
+        mkdir "$GITHUB_WORKSPACE/artifacts/Octopub.Products"
+        cp *.yml "$GITHUB_WORKSPACE/artifacts/Octopub.Products"
+
+    - name: Package Octopub.Products 🐙
+      uses: OctopusDeploy/create-zip-package-action@v3
+      with:
+        package_id: "Octopub.Products"
+        version: "${{ steps.version-generator.outputs.version }}"
+        output_folder: "${{ github.workspace }}/artifacts"
+        base_path: "${{ github.workspace }}/artifacts/Octopub.Products"
+        files: |
+          **/*.*
+
+    - name: Publish Artifacts to Octopus
+      uses: OctopusDeploy/push-package-action@v3
+      with:
+        api_key: ${{ secrets.OCTOPUS_API_KEY }}
+        server: ${{ vars.OCTOPUS_SERVER_URL }}
+        space: ${{ vars.OCTOPUS_SPACE_NAME }}
+        packages: |
+          artifacts/Octopub.Products.${{ steps.version-generator.outputs.version }}.zip
+
+  push-build-information:
+      name: Push Build Information to Octopus 🐙
+      needs: package 
+      runs-on: ubuntu-latest
+      
+      env:
+        OCTOPUS_URL: ${{ vars.OCTOPUS_SERVER_URL }}
+        OCTOPUS_API_KEY: ${{ secrets.OCTOPUS_API_KEY }}
+        OCTOPUS_SPACE: ${{ vars.OCTOPUS_SPACE_NAME }}
+      
+      steps:
+      - uses: OctopusDeploy/push-build-information-action@v3
+        name: Push Build Information
+        with:
+          version: ${{ needs.package.outputs.version }}
+          packages: |
+            Octopub.Products
+

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+spec:
+  selector:
+    matchLabels:
+      app: product-service
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      containers:
+        - name: octopub-products
+          image: octopussamples/octopub-products-microservice-mysql
+          ports:
+            - name: http
+              containerPort: 8083
+          env:
+          - name: DATABASE_HOSTNAME
+            value: mysql.database.svc.cluster.local
+          - name: DATABASE_PORT
+            value: "3306"
+          - name: DATABASE_NAME
+            value: octopub
+          - name: DATABASE_USERNAME
+            value: root
+          - name: DATABASE_PASSWORD
+            value: "insert password here"
+          - name: MIGRATE_AT_START
+            value: "true"
