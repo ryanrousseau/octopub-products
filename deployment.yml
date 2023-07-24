@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: octopub-products
-          image: octopussamples/octopub-products-microservice-mysql
+          image: octopussamples/octopub-products-microservice-mysql:0.1.167
           ports:
             - name: http
               containerPort: 8083
