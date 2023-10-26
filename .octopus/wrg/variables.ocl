@@ -1,0 +1,17 @@
+variable "spec:rules:0:host" {
+    value "#{Octopub.Tenant.Host}" {
+        action = ["create-ingress"]
+    }
+}
+
+variable "spec:tls:0:hosts:0" {
+    value "#{Octopub.Tenant.Host}" {
+        action = ["create-ingress"]
+    }
+}
+
+variable "spect:tls:0:secretName" {
+    value "#{Octopub.Tenant.Cluster.Name}-tls" {
+        action = ["create-ingress"]
+    }
+}
